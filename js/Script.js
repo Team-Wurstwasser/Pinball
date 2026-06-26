@@ -101,73 +101,11 @@ Pinball.Preloader.prototype = {
 
 	create: function()
 		{
-		// STARTING THE GAME
-		this.state.start("Pinball.Splash");
-		}
-	};
-
-Pinball.Splash = function(){};
-
-Pinball.Splash.prototype = {
-
-	init: function()
-		{
-		},
-
-	preload: function()
-		{
-		this.imageLogoPart1 = null;
-		this.imageLogoPart1Handler = null;
-		this.imageLogoPart2 = null;
-		this.imageLogoPart2Handler = null;
-		},
-
-	create: function()
-		{
-		// SETTING THE LOGO OFFSET
-		var logoOffset = 20;
-
-		// SETTING THE BACKGROUND COLOR
 		this.stage.backgroundColor = "#FFFFFF";
-
-		// SHOWING THE BACKGROUND IMAGE
 		document.getElementsByClassName("background")[0].style.display = "block";
 
-		this.imageLogoPart1 = game.add.sprite(0, 0, "imageLogoPart1");
-		this.imageLogoPart1.scale.x = 0.7;
-		this.imageLogoPart1.scale.y = 0.7;
-		this.imageLogoPart1.position.x = game.width / 2 - this.imageLogoPart1.width / 2;
-		this.imageLogoPart1.position.y = game.height / 2 - this.imageLogoPart1.height / 2 - logoOffset;
-		this.imageLogoPart1.alpha = 0;
-
-		// ADDING THE LOGO
-		this.imageLogoPart2 = game.add.sprite(0, 0, "imageLogoPart2");
-		this.imageLogoPart2.scale.x = 0.7;
-		this.imageLogoPart2.scale.y = 0.7;
-		this.imageLogoPart2.position.x = game.width / 2 - this.imageLogoPart2.width / 2;
-		this.imageLogoPart2.position.y = -this.imageLogoPart2.height + 75;
-
-		// WAITING 500 MS
-		game.time.events.add(500, function()
-			{
-			// FADING IN THE URL
-			this.imageLogoPart1Handler = game.add.tween(game.state.states["Pinball.Splash"].imageLogoPart1).to({alpha: 1}, 1500, Phaser.Easing.Linear.None, true);
-			});
-
-		// WAITING 1500 MS
-		game.time.events.add(1500, function()
-			{
-			// MOVING THE LOGO INTO THE SCENE
-			game.add.tween(game.state.states["Pinball.Splash"].imageLogoPart2).to({y: game.height / 2 - game.state.states["Pinball.Splash"].imageLogoPart2.height / 2 - logoOffset}, 2000, Phaser.Easing.Quadratic.InOut, true).onComplete.add(function()
-				{
-				// WAITING 750 MS
-				game.time.events.add(750, function()
-					{
-					// LOADING THE GAME MENU
-					game.state.start("Pinball.Menu", Phaser.Plugin.StateTransition.Out.SlideLeft);
-					});
-				});
-			});
+		// STARTING THE GAME
+		game.state.start("Pinball.Menu", Phaser.Plugin.StateTransition.Out.SlideLeft);
 		}
 	};
 
@@ -495,8 +433,6 @@ Pinball.Game = function(game)
 	this.buttonBPressed = null;
 	this.buttonBHandler = null;
 
-	this.isMobileDevice = null;
-
 	this.audioPlayer = null;
 
 	// SCALING THE CANVAS SIZE FOR THE GAME
@@ -584,15 +520,11 @@ Pinball.Game.prototype = {
 		this.buttonBPressed = null;
 		this.buttonBHandler = null;
 
-		this.isMobileDevice = null;
-
 		this.audioPlayer = null;
 		},
 
 	create: function()
 		{
-		// CHECKING IS THE GAME IS RUNNING IN A MOBILE DEVICE
-		this.isMobileDevice = isMobileDevice();
 
 		// SETTING THE GAME BOUNDS
 		game.world.setBounds(-435, -540, 600, 335);
@@ -1211,20 +1143,6 @@ Pinball.Game.prototype = {
 		this.buttonBHandler.events.onInputDown.add(function(){this.buttonBHandler.isDown=true;this.buttonBNormal.visible=false;this.buttonBPressed.visible=true;this.update();},this);
 		this.buttonBHandler.events.onInputUp.add(function(){this.buttonBHandler.isDown=false;this.buttonBNormal.visible=true;this.buttonBPressed.visible=false;},this);
 
-		// CHECKING IF IT IS A MOBILE DEVICE
-		if (this.isMobileDevice==false)
-			{
-			// HIDING THE BUTTON A
-			this.buttonANormal.visible = false;
-			this.buttonAPressed.visible = false;
-			this.buttonAHandler.visible = false;
-
-			// HIDING THE BUTTON B
-			this.buttonBNormal.visible = false;
-			this.buttonBPressed.visible = false;
-			this.buttonBHandler.visible = false;
-			}
-
 		// GETTING THE CURSOR KEY INPUTS
 		this.cursors = game.input.keyboard.createCursorKeys();
 
@@ -1478,23 +1396,12 @@ Pinball.Game.prototype = {
 		}
 	};
 
-// SETTING THE DEFAULT RENDERER MODE
-var rendererMode = Phaser.WEBGL;
-
-// CHECKING IF THE WEBGL RENDERER MODE IS NOT AVAILABLE
-if (isWebGLAvailable()==false)
-	{
-	// CHANGING THE RENDERER MODE
-	rendererMode = Phaser.CANVAS;
-	}
-
 // CREATING THE GAME INSTANCE
-var config = {width: 320, height: 608, renderer: rendererMode, parent: "content", disableVisibilityChange: false};
+var config = {width: 320, height: 608, renderer: Phaser.WEBGL, parent: "content", disableVisibilityChange: false};
 var game = new Phaser.Game(config);
 
 // CREATING THE STATES
 game.state.add("Pinball.Preloader", Pinball.Preloader);
-game.state.add("Pinball.Splash", Pinball.Splash);
 game.state.add("Pinball.Menu", Pinball.Menu);
 game.state.add("Pinball.Game", Pinball.Game);
 
