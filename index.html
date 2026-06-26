@@ -1,15 +1,36 @@
 <!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Pinball</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
-</head>
-<body>
-    <div id="game-container">
-        <div id="ui"><span>SCORE: <span id="score">0</span></span><span>LIVES: <span id="lives">3</span></span></div>
-        <canvas id="pinballCanvas"></canvas>
-    </div>
-</body>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pinball</title>
+        <link rel="icon" type="img/png" href="img/Logo.png">
+        <link rel="stylesheet" href="Style.css">
+        <script src="js/isWebGLAvailable.js"></script>
+        <script src="js/isMobileDevice.js"></script>
+        <script src="js/Phaser.js"></script>
+        <script src="js/phaser-state-transition.js"></script>
+        <script src="js/Box2D.js"></script>
+        <script src="js/Script.js" defer></script>
+    </head>
+    <body>
+        <div class="background"></div>
+        <div class="pleasewait" id="loading">
+            <div class="lds-spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <div id="content" oncontextmenu="return false;"></div>
+    </body>
 </html>
