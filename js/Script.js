@@ -73,19 +73,17 @@ class PinballGame extends Phaser.Scene {
         this.guide4Vertices = [671,-1110,956,-1282,956,-1762,671,-1110];
         this.gutterVertices1 = [-480,650,293,650];
         this.gutterVertices2 = [-480,750,293,750];
-        this.smallCircles = [-1320,-1759,1160,-1759];
         this.mediumCircles = [-1500,-3132,-866,-3163,-290,-3074,187,-3415,614,-3074,-451,-2232,396,-2242];
         this.largeCircles = [-446,-3704,309,-4133,990,-3750];
         this.leftFlipperVertices = [560,32,560,-32,0,-40,0,94];
         this.rightFlipperVertices = [0,94,0,-40,-560,-32,-560,32];
-        this.ballStart = [15.2016, -30];
-        this.PTM = 100;
+        this.ballStart = [152, -300];
         this.flipperSpeed = 15;
     }
 
     init() {
         this.scoreValue = 0;
-        this.gameOver = false;
+        this.gameOver = true;
         this.launcherIsMoving = false;
     }
 
@@ -95,7 +93,7 @@ class PinballGame extends Phaser.Scene {
         const arrays = [
             this.outlineVertices, this.launcherVertices, this.guide1Vertices, this.guide2Vertices,
             this.guide3Vertices, this.guide4Vertices, this.gutterVertices1, this.gutterVertices2,
-            this.smallCircles, this.mediumCircles, this.largeCircles, this.leftFlipperVertices,
+            this.mediumCircles, this.largeCircles, this.leftFlipperVertices,
             this.rightFlipperVertices, this.ballStart
         ];
         arrays.forEach(arr => {
@@ -119,7 +117,7 @@ class PinballGame extends Phaser.Scene {
         }
 
         this.boardOverlay = this.add.tileSprite(-170, -555, 600, 835, "imageGameBoard").setOrigin(0, 0);
-        
+
         const overlayMask = this.add.graphics();
         overlayMask.fillStyle(0xffffff, 1);
 
@@ -130,12 +128,19 @@ class PinballGame extends Phaser.Scene {
         overlayMask.setVisible(false);
 
         if (this.renderer.type === Phaser.WEBGL) {
-         this.boardOverlay.enableFilters();
+            this.boardOverlay.enableFilters();
             this.boardOverlay.filters.external.addMask(overlayMask);
         } else {
             const overlayGeometryMask = overlayMask.createGeometryMask();
             this.boardOverlay.setMask(overlayGeometryMask);
         }
+
+        this.createEdgeBodies(this.outlineVertices, {
+            thickness: 1,
+            friction: 0.05,
+            restitution: 0.5,
+            label: 'outline'
+        }, true);
 
         this.pinballBoardLine = this.add.graphics();
         this.pinballBoardLine.lineStyle(2.05, 0x343434, 1);
@@ -152,6 +157,30 @@ class PinballGame extends Phaser.Scene {
 
         this.rightBounceLine = this.add.graphics().lineStyle(2, 0x343434, 1);
         this.drawVerticesToGraphics(this.rightBounceLine, this.guide4Vertices);
+
+        [this.guide1Vertices, this.guide2Vertices, this.guide3Vertices, this.guide4Vertices].forEach((verts, idx) => {
+            this.createEdgeBodies(verts, {
+                thickness: 1,
+                friction: 0.05,
+                restitution: 0.5,
+                label: 'guide' + (idx + 1)
+            }, true);
+        });
+
+        this.gutterBody1 = this.matter.add.rectangle(
+            (this.gutterVertices1[0] + this.gutterVertices1[2]) / 2,
+            this.gutterVertices1[1],
+            Math.abs(this.gutterVertices1[2] - this.gutterVertices1[0]),
+            4,
+            { isStatic: true, isSensor: true, label: 'gutter1' }
+        );
+        this.gutterBody2 = this.matter.add.rectangle(
+            (this.gutterVertices2[0] + this.gutterVertices2[2]) / 2,
+            this.gutterVertices2[1],
+            Math.abs(this.gutterVertices2[2] - this.gutterVertices2[0]),
+            4,
+            { isStatic: true, isSensor: true, label: 'gutter2' }
+        );
 
         const fontStyle = {
             fontFamily: '"Arial Black", Gadget, sans-serif',
@@ -180,27 +209,63 @@ class PinballGame extends Phaser.Scene {
         this.drawVerticesToGraphics(this.leftFlipperSprite, this.leftFlipperVertices, true);
         this.leftFlipperSprite.setPosition(-80, -80);
 
+        this.leftFlipperCentroidLocal = this.getCentroid(this.leftFlipperVertices);
+        this.leftFlipperBody = this.matter.add.fromVertices(
+            -80 + this.leftFlipperCentroidLocal.x,
+            -80 + this.leftFlipperCentroidLocal.y,
+            [this.toPointList(this.leftFlipperVertices)],
+            { friction: 0.1, restitution: 0.3, density: 0.02, label: 'leftFlipper' },
+            true
+        );
+        this.leftFlipperConstraint = this.matter.add.worldConstraint(this.leftFlipperBody, 0, 1, {
+            pointA: { x: -80, y: -80 },
+            pointB: { x: -this.leftFlipperCentroidLocal.x, y: -this.leftFlipperCentroidLocal.y }
+        });
+
         this.rightFlipperSprite = this.add.graphics();
         this.rightFlipperSprite.fillStyle(0xffffff, 1).lineStyle(2, 0x343434, 1);
         this.drawVerticesToGraphics(this.rightFlipperSprite, this.rightFlipperVertices, true);
         this.rightFlipperSprite.setPosition(64, -80);
 
-        for(let i = 0; i < this.mediumCircles.length / 2; i++) {
+        this.rightFlipperCentroidLocal = this.getCentroid(this.rightFlipperVertices);
+        this.rightFlipperBody = this.matter.add.fromVertices(
+            64 + this.rightFlipperCentroidLocal.x,
+            -80 + this.rightFlipperCentroidLocal.y,
+            [this.toPointList(this.rightFlipperVertices)],
+            { friction: 0.1, restitution: 0.3, density: 0.02, label: 'rightFlipper' },
+            true
+        );
+        this.rightFlipperConstraint = this.matter.add.worldConstraint(this.rightFlipperBody, 0, 1, {
+            pointA: { x: 64, y: -80 },
+            pointB: { x: -this.rightFlipperCentroidLocal.x, y: -this.rightFlipperCentroidLocal.y }
+        });
+
+        for (let i = 0; i < this.mediumCircles.length / 2; i++) {
             let cx = Math.floor(this.mediumCircles[2 * i] * 0.10);
             let cy = Math.floor(this.mediumCircles[2 * i + 1] * 0.10);
-            this.add.sprite(cx, cy, "imageGameMediumCircle");
+            const sprite = this.add.sprite(cx, cy, "imageGameMediumCircle");
+            this.matter.add.circle(cx, cy, sprite.width / 2, { isStatic: true, restitution: 0.9, label: 'mediumCircle' });
         }
 
-        for(let i = 0; i < this.largeCircles.length / 2; i++) {
+        for (let i = 0; i < this.largeCircles.length / 2; i++) {
             let cx = Math.floor(this.largeCircles[2 * i] * 0.10);
             let cy = Math.floor(this.largeCircles[2 * i + 1] * 0.10);
-            this.add.sprite(cx, cy, "imageGameLargeCircle");
+            const sprite = this.add.sprite(cx, cy, "imageGameLargeCircle");
+            this.matter.add.circle(cx, cy, sprite.width / 2, { isStatic: true, restitution: 0.9, label: 'largeCircle' });
         }
 
-        this.ballSprite = this.add.sprite(0, 0, "imageGameBall");
+        this.ball = this.matter.add.sprite(0, 0, "imageGameBall");
+        this.ball.setCircle(this.ball.width / 2);
+        this.ball.setBounce(0.5);
+
         this.launcherContainer = this.add.container(140, 51);
         this.launcherSprite = this.add.sprite(0, -100, "imageGameLauncher");
         this.launcherContainer.add(this.launcherSprite);
+
+        this.launcherBody = this.matter.add.rectangle(140, 51 - 100, 20, 60, {
+            isStatic: true,
+            label: 'launcher'
+        });
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -208,16 +273,48 @@ class PinballGame extends Phaser.Scene {
     }
 
     update() {
+        if (this.gameOver == true) {
+            this.ball.setPosition(this.ballStart[0], this.ballStart[1]);
+
+            this.ball.setVelocity(0, 0);
+            this.ball.setAngularVelocity(0);
+            this.ball.setAngle(0);
+            this.gameOver = false;
+        }
+
         if (this.cursors.left.isDown || this.keyA.isDown) {
-            if(this.leftFlipperSprite.angle > -25) this.leftFlipperSprite.angle -= this.flipperSpeed;
+            if (this.leftFlipperSprite.angle > -25) this.leftFlipperSprite.angle -= this.flipperSpeed;
         } else {
-            if(this.leftFlipperSprite.angle < 27) this.leftFlipperSprite.angle += this.flipperSpeed;
+            if (this.leftFlipperSprite.angle < 27) this.leftFlipperSprite.angle += this.flipperSpeed;
         }
 
         if (this.cursors.right.isDown || this.keyD.isDown) {
-            if(this.rightFlipperSprite.angle < 25) this.rightFlipperSprite.angle += this.flipperSpeed;
+            if (this.rightFlipperSprite.angle < 25) this.rightFlipperSprite.angle += this.flipperSpeed;
         } else {
-            if(this.rightFlipperSprite.angle > -27) this.rightFlipperSprite.angle -= this.flipperSpeed;
+            if (this.rightFlipperSprite.angle > -27) this.rightFlipperSprite.angle -= this.flipperSpeed;
+        }
+
+        if (this.leftFlipperBody) {
+            const rad = Phaser.Math.DegToRad(this.leftFlipperSprite.angle);
+            const c = this.leftFlipperCentroidLocal;
+            const rotX = c.x * Math.cos(rad) - c.y * Math.sin(rad);
+            const rotY = c.x * Math.sin(rad) + c.y * Math.cos(rad);
+            this.matter.body.setAngle(this.leftFlipperBody, rad);
+            this.matter.body.setPosition(this.leftFlipperBody, {
+                x: this.leftFlipperSprite.x + rotX,
+                y: this.leftFlipperSprite.y + rotY
+            });
+        }
+        if (this.rightFlipperBody) {
+            const rad = Phaser.Math.DegToRad(this.rightFlipperSprite.angle);
+            const c = this.rightFlipperCentroidLocal;
+            const rotX = c.x * Math.cos(rad) - c.y * Math.sin(rad);
+            const rotY = c.x * Math.sin(rad) + c.y * Math.cos(rad);
+            this.matter.body.setAngle(this.rightFlipperBody, rad);
+            this.matter.body.setPosition(this.rightFlipperBody, {
+                x: this.rightFlipperSprite.x + rotX,
+                y: this.rightFlipperSprite.y + rotY
+            });
         }
 
         if (this.launcherIsMoving) {
@@ -228,7 +325,61 @@ class PinballGame extends Phaser.Scene {
                 this.launcherSprite.y += 10;
                 if (this.launcherSprite.y >= -100) this.launcherIsMoving = false;
             }
+            if (this.launcherBody) {
+                this.matter.body.setPosition(this.launcherBody, {
+                    x: this.launcherContainer.x,
+                    y: this.launcherContainer.y + this.launcherSprite.y
+                });
+            }
         }
+    }
+
+    createEdgeBodies(vertices, options = {}, closed = true) {
+        const points = this.toPointList(vertices);
+        const bodies = [];
+        const count = closed ? points.length : points.length - 1;
+
+        for (let i = 0; i < count; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % points.length];
+
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            if (length === 0) continue;
+
+            const angle = Math.atan2(dy, dx);
+            const cx = (p1.x + p2.x) / 2;
+            const cy = (p1.y + p2.y) / 2;
+
+            const body = this.matter.add.rectangle(cx, cy, length, options.thickness || 4, {
+                isStatic: true,
+                angle: angle,
+                friction: options.friction ?? 0.05,
+                restitution: options.restitution ?? 0.5,
+                label: options.label || 'edge'
+            });
+            bodies.push(body);
+        }
+        return bodies;
+    }
+
+    getCentroid(vertices) {
+        let sumX = 0, sumY = 0;
+        const count = vertices.length / 2;
+        for (let i = 0; i < vertices.length; i += 2) {
+            sumX += vertices[i] * 0.10;
+            sumY += vertices[i + 1] * 0.10;
+        }
+        return { x: sumX / count, y: sumY / count };
+    }
+
+    toPointList(vertices) {
+        const points = [];
+        for (let i = 0; i < vertices.length; i += 2) {
+            points.push({ x: vertices[i] * 0.10, y: vertices[i + 1] * 0.10 });
+        }
+        return points;
     }
 
     drawVerticesToGraphics(graphics, vertices, fill = false) {
@@ -237,7 +388,7 @@ class PinballGame extends Phaser.Scene {
             if (i === 0) graphics.moveTo(vertices[i] * 0.10, vertices[i + 1] * 0.10);
             else graphics.lineTo(vertices[i] * 0.10, vertices[i + 1] * 0.10);
         }
-        if(fill) graphics.closePath().fillPath().strokePath();
+        if (fill) graphics.closePath().fillPath().strokePath();
         else graphics.strokePath();
     }
 
@@ -282,7 +433,7 @@ const config = {
 	physics: {
         default: 'matter',
         matter: {
-            gravity: { y: 5 },
+            gravity: { y: 2 },
             debug: true 
         }
     },
