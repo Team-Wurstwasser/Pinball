@@ -216,14 +216,14 @@ class PinballGame extends Phaser.Scene {
         this.rightFlipperSprite.setPosition(64, -80);
 
         for(let i = 0; i < this.mediumCircles.length / 2; i++) {
-            let cx = Math.floor(this.mediumCircles[2 * i] * 0.10 - 11.75);
-            let cy = Math.floor(this.mediumCircles[2 * i + 1] * 0.10 - 11.75);
+            let cx = Math.floor(this.mediumCircles[2 * i] * 0.10);
+            let cy = Math.floor(this.mediumCircles[2 * i + 1] * 0.10);
             this.add.sprite(cx, cy, "imageGameMediumCircle");
         }
 
         for(let i = 0; i < this.largeCircles.length / 2; i++) {
-            let cx = Math.floor(this.largeCircles[2 * i] * 0.10 - 26.45);
-            let cy = Math.floor(this.largeCircles[2 * i + 1] * 0.10 - 26.45);
+            let cx = Math.floor(this.largeCircles[2 * i] * 0.10);
+            let cy = Math.floor(this.largeCircles[2 * i + 1] * 0.10);
             this.add.sprite(cx, cy, "imageGameLargeCircle");
         }
     }
@@ -238,6 +238,20 @@ class PinballGame extends Phaser.Scene {
         else graphics.strokePath();
     }
 
+    updateScore(newScore) {
+        if (newScore > 9999) newScore = 9999;
+        this.scoreValue = newScore;
+        
+        this.scoreLabel.setText(newScore);
+        this.scoreLabelShadow.setText(newScore);
+
+        if (this.scoreValue > parseInt(this.getHighscore())) {
+            this.setHighscore(this.scoreValue);
+            this.highScoreLabel.setText(newScore);
+            this.highScoreLabelShadow.setText(newScore);
+        }
+    }
+
     getHighscore() {
         try {
             const nameEQ = "highscorepinball=";
@@ -248,6 +262,14 @@ class PinballGame extends Phaser.Scene {
             }
         } catch (err) {}
         return "0";
+    }
+
+    setHighscore(newHighscore) {
+        try {
+            let date = new Date();
+            date.setTime(date.getTime() + (999 * 24 * 60 * 60 * 1000));
+            document.cookie = `highscorepinball=${newHighscore}; expires=${date.toUTCString()}; SameSite=Lax; Secure; path=/`;
+        } catch (err) {}
     }
 }
 
