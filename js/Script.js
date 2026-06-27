@@ -88,6 +88,9 @@ class PinballGame extends Phaser.Scene {
     }
 
     create() {
+        this.matter.world.engine.positionIterations = 14;
+        this.matter.world.engine.velocityIterations = 10;
+
         this.cameras.main.setBounds(-435, -540, 600, 335);
 
         const arrays = [
