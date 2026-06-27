@@ -38,20 +38,11 @@ class PinballMainMenu extends Phaser.Scene {
         super({ key: 'Menu' });
     }
 
-    init() {
-        this.menuMainBackgroundImage = null;
-        this.menuMainAppIcon = null;
-        this.menuMainAppTitle = null;
-        this.menuMainAppVersion = null;
-        this.menuMainPlayButton = null;
-        this.menuMainPlayButtonIcon = null;
-    }
-
     create() {
         const gameWidth = this.sys.game.config.width;
         const gameHeight = this.sys.game.config.height;
 
-        this.menuMainBackgroundImage = this.add.image(0, 0, "imageMenuBackground").setOrigin(0, 0);
+        this.add.image(0, 0, "imageMenuBackground").setOrigin(0, 0);
 
         this.menuMainAppIcon = this.add.image(0, 50, "imageMenuAppIcon").setOrigin(0, 0);
         this.menuMainAppIcon.setScale(0.7);
@@ -68,13 +59,13 @@ class PinballMainMenu extends Phaser.Scene {
     }
 
     playGame() {
-        this.scene.start("PinballGame");
+        this.scene.start("Game");
     }
 }
 
 class PinballGame extends Phaser.Scene {
     constructor() {
-        super({ key: 'PinballGame' });
+        super({ key: 'Game' });
 
         this.outlineVertices = [1440,-3687,1023,-2194,1365,-1961,1365,-663,638,-480,160,-154,150,971,-330,970,-335,-153,-800,-480,-1540,-619,-1540,-1988,-1147,-2175,-1429,-3152,-1500,-3195,-1492,-3399,-1438,-3867,-1309,-4132,-1112,-4351,-787,-4540,-389,-4670,139,-4778,655,-4846,872,-4837,1067,-4792,1236,-4700,1374,-4584,1480,-4440,1557,-4271,1601,-3992,1601,-3712,1600,-171,1442,-169,1440,-3687];
         this.launcherVertices = [1401,-500,1631,-500];
