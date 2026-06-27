@@ -83,7 +83,7 @@ class PinballGame extends Phaser.Scene {
 
     init() {
         this.scoreValue = 0;
-        this.gameOver = true;
+        this.gameOver = false;
         this.launcherIsMoving = false;
     }
 
@@ -270,15 +270,13 @@ class PinballGame extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+
+        this.setBallStartPosition();
     }
 
     update() {
         if (this.gameOver == true) {
-            this.ball.setPosition(this.ballStart[0], this.ballStart[1]);
-
-            this.ball.setVelocity(0, 0);
-            this.ball.setAngularVelocity(0);
-            this.ball.setAngle(0);
+            this.setBallStartPosition();
             this.gameOver = false;
         }
 
@@ -332,6 +330,13 @@ class PinballGame extends Phaser.Scene {
                 });
             }
         }
+    }
+
+    setBallStartPosition() {
+        const startX = this.ballStart[0];
+        const startY = this.ballStart[1];
+        this.ball.setPosition(startX, startY);
+        this.ball.setVelocity(0, 0);
     }
 
     createEdgeBodies(vertices, options = {}, closed = true) {
@@ -395,7 +400,7 @@ class PinballGame extends Phaser.Scene {
     updateScore(newScore) {
         if (newScore > 9999) newScore = 9999;
         this.scoreValue = newScore;
-        
+
         this.scoreLabel.setText(newScore);
 
         if (this.scoreValue > parseInt(this.getHighscore())) {
