@@ -127,9 +127,6 @@ class PinballGame extends Phaser.Scene {
     create() {
         this.cameras.main.setBounds(-435, -540, 600, 335);
 
-        this.add.tileSprite(-170, -555, 600, 835, "imageGameBackground").setOrigin(0, 0);
-        this.gameBoard = this.add.tileSprite(-170, -555, 600, 835, "imageGameBoard").setOrigin(0, 0);
-
         const arrays = [
             this.outlineVertices, this.launcherVertices, this.guide1Vertices, this.guide2Vertices,
             this.guide3Vertices, this.guide4Vertices, this.gutterVertices1, this.gutterVertices2,
@@ -139,6 +136,31 @@ class PinballGame extends Phaser.Scene {
         arrays.forEach(arr => {
             for (let i = 0; i < arr.length; i++) arr[i] *= 0.95;
         });
+
+        this.add.tileSprite(-170, -555, 600, 835, "imageGameBoard").setOrigin(0, 0);
+        this.gameGameBackground = this.add.tileSprite(-170, -555, 600, 835, "imageGameBackground").setOrigin(0, 0);
+        
+        const backgroundMask = this.add.graphics();
+        backgroundMask.fillStyle(0xffffff, 1);
+        this.drawVerticesToGraphics(backgroundMask, this.outlineVertices, true);
+        
+        this.gameGameBackground.enableFilters();
+        this.gameGameBackground.filters.external.addMask(backgroundMask);
+        backgroundMask.setVisible(false);
+
+        this.boardOverlay = this.add.tileSprite(-170, -555, 600, 835, "imageGameBoard").setOrigin(0, 0);
+        
+        const overlayMask = this.add.graphics();
+        overlayMask.fillStyle(0xffffff, 1);
+        
+        this.drawVerticesToGraphics(overlayMask, this.guide1Vertices, true);
+        this.drawVerticesToGraphics(overlayMask, this.guide2Vertices, true);
+        this.drawVerticesToGraphics(overlayMask, this.guide3Vertices, true);
+        this.drawVerticesToGraphics(overlayMask, this.guide4Vertices, true);
+        
+        this.boardOverlay.enableFilters();
+        this.boardOverlay.filters.external.addMask(overlayMask);
+        overlayMask.setVisible(false);
 
         this.pinballBoardLine = this.add.graphics();
         this.pinballBoardLine.lineStyle(2.05, 0x343434, 1);
