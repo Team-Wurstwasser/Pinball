@@ -1,31 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Pinball</title>
-        <link rel="icon" type="img/png" href="img/Logo.png">
+        <link rel="icon" type="image/png" href="img/Logo.png">
         <link rel="stylesheet" href="Style.css">
-        <script src="js/Phaser.js"></script>
-        <script src="js/Box2D.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/phaser@4.2.0/dist/phaser.min.js"></script>
         <script src="js/Script.js" defer></script>
     </head>
+    
     <body>
         <div class="background"></div>
         <div class="pleasewait" id="loading">
             <div class="lds-spinner">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
+                <div></div><div></div><div></div><div></div>
+                <div></div><div></div><div></div><div></div>
+                <div></div><div></div><div></div><div></div>
             </div>
         </div>
         <div id="content" oncontextmenu="return false;"></div>
