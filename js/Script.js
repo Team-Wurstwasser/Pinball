@@ -12,8 +12,6 @@ class PinballPreloader extends Phaser.Scene {
     this.load.image("imageMenuAppIcon", "img/MenuAppIcon.png");
     this.load.image("imageMenuPlay", "img/MenuPlay.png");
     this.load.image("imageMenuButton", "img/MenuButton.png");
-
-    // Spiel-Grafiken laden
     this.load.image("imageGameBackground", "img/GameBackground.jpg");
     this.load.image("imageGameBoard", "img/GameBoard.jpg");
     this.load.image("imageGameBall", "img/GameBall.png");
@@ -113,28 +111,38 @@ class PinballGame extends Phaser.Scene {
 
         this.add.tileSprite(-170, -555, 600, 835, "imageGameBoard").setOrigin(0, 0);
         this.gameGameBackground = this.add.tileSprite(-170, -555, 600, 835, "imageGameBackground").setOrigin(0, 0);
-        
+
         const backgroundMask = this.add.graphics();
         backgroundMask.fillStyle(0xffffff, 1);
         this.drawVerticesToGraphics(backgroundMask, this.outlineVertices, true);
-        
-        this.gameGameBackground.enableFilters();
-        this.gameGameBackground.filters.external.addMask(backgroundMask);
         backgroundMask.setVisible(false);
+
+        if (this.renderer.type === Phaser.WEBGL) {
+            this.gameGameBackground.enableFilters();
+            this.gameGameBackground.filters.external.addMask(backgroundMask);
+        } else {
+            const bgGeometryMask = backgroundMask.createGeometryMask();
+            this.gameGameBackground.setMask(bgGeometryMask);
+        }
 
         this.boardOverlay = this.add.tileSprite(-170, -555, 600, 835, "imageGameBoard").setOrigin(0, 0);
         
         const overlayMask = this.add.graphics();
         overlayMask.fillStyle(0xffffff, 1);
-        
+
         this.drawVerticesToGraphics(overlayMask, this.guide1Vertices, true);
         this.drawVerticesToGraphics(overlayMask, this.guide2Vertices, true);
         this.drawVerticesToGraphics(overlayMask, this.guide3Vertices, true);
         this.drawVerticesToGraphics(overlayMask, this.guide4Vertices, true);
-        
-        this.boardOverlay.enableFilters();
-        this.boardOverlay.filters.external.addMask(overlayMask);
         overlayMask.setVisible(false);
+
+        if (this.renderer.type === Phaser.WEBGL) {
+         this.boardOverlay.enableFilters();
+            this.boardOverlay.filters.external.addMask(overlayMask);
+        } else {
+            const overlayGeometryMask = overlayMask.createGeometryMask();
+            this.boardOverlay.setMask(overlayGeometryMask);
+        }
 
         this.pinballBoardLine = this.add.graphics();
         this.pinballBoardLine.lineStyle(2.05, 0x343434, 1);
