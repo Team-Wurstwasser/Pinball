@@ -8,22 +8,21 @@ class PinballPreloader extends Phaser.Scene {
     }
 
     preload() {
-    this.load.image("imageMenuBackground", "img/MenuBackground.jpg");
-    this.load.image("imageMenuAppIcon", "img/MenuAppIcon.png");
-    this.load.image("imageMenuPlay", "img/MenuPlay.png");
-    this.load.image("imageMenuButton", "img/MenuButton.png");
-    this.load.image("imageGameBackground", "img/GameBackground.jpg");
-    this.load.image("imageGameBoard", "img/GameBoard.jpg");
-    this.load.image("imageGameBall", "img/GameBall.png");
-    this.load.image("imageGameLargeCircle", "img/GameLargeCircle.png");
-    this.load.image("imageGameMediumCircle", "img/GameMediumCircle.png");
-    this.load.image("imageGameLauncher", "img/GameLauncher.png");
-    this.load.image("imageGameHighScore", "img/GameHighScore.png");
-    this.load.image("imageGameButtonANormal", "img/GameButtonANormal.png");
-    this.load.image("imageGameButtonAPressed", "img/GameButtonAPressed.png");
-    this.load.image("imageGameButtonBNormal", "img/GameButtonBNormal.png");
-    this.load.image("imageGameButtonBPressed", "img/GameButtonBPressed.png");
-    this.load.image("imageGameBlock", "img/GameBlock.png");
+        this.load.image("imageMenuBackground", "img/MenuBackground.jpg");
+        this.load.image("imageMenuAppIcon", "img/MenuAppIcon.png");
+        this.load.image("imageMenuPlay", "img/MenuPlay.png");
+        this.load.image("imageMenuButton", "img/MenuButton.png");
+        this.load.image("imageGameBackground", "img/GameBackground.jpg");
+        this.load.image("imageGameBoard", "img/GameBoard.jpg");
+        this.load.image("imageGameBall", "img/GameBall.png");
+        this.load.image("imageGameLargeCircle", "img/GameLargeCircle.png");
+        this.load.image("imageGameMediumCircle", "img/GameMediumCircle.png");
+        this.load.image("imageGameLauncher", "img/GameLauncher.png");
+        this.load.image("imageGameHighScore", "img/GameHighScore.png");
+        this.load.image("imageGameButtonANormal", "img/GameButtonANormal.png");
+        this.load.image("imageGameButtonAPressed", "img/GameButtonAPressed.png");
+        this.load.image("imageGameButtonBNormal", "img/GameButtonBNormal.png");
+        this.load.image("imageGameButtonBPressed", "img/GameButtonBPressed.png");
     }
 
 	create() {
@@ -85,6 +84,7 @@ class PinballGame extends Phaser.Scene {
         this.scoreValue = 0;
         this.gameOver = false;
         this.launcherIsMoving = false;
+        this.launcherGoingUp = false;
     }
 
     create() {
@@ -136,8 +136,10 @@ class PinballGame extends Phaser.Scene {
         }
 
         this.createEdgeBodies(this.outlineVertices, {
-            thickness: 1,
-            friction: 0.05,
+            thickness: 2,
+            friction: 0,
+            frictionStatic: 0,
+            frictionAir: 0,
             restitution: 0.5,
             label: 'outline'
         }, true);
@@ -160,8 +162,10 @@ class PinballGame extends Phaser.Scene {
 
         [this.guide1Vertices, this.guide2Vertices, this.guide3Vertices, this.guide4Vertices].forEach((verts, idx) => {
             this.createEdgeBodies(verts, {
-                thickness: 1,
-                friction: 0.05,
+                thickness: 2,
+                friction: 0,
+                frictionStatic: 0,
+                frictionAir: 0,
                 restitution: 0.5,
                 label: 'guide' + (idx + 1)
             }, true);
@@ -258,13 +262,45 @@ class PinballGame extends Phaser.Scene {
         this.ball.setCircle(this.ball.width / 2);
         this.ball.setBounce(0.5);
 
-        this.launcherContainer = this.add.container(140, 51);
-        this.launcherSprite = this.add.sprite(0, -100, "imageGameLauncher");
+        const launcherPoints = this.toPointList(this.launcherVertices);
+        const launcherCenterX = (launcherPoints[0].x + launcherPoints[1].x) / 2;
+        const launcherTopY = Math.min(launcherPoints[0].y, launcherPoints[1].y);
+
+        this.launcherContainer = this.add.container(launcherCenterX, launcherTopY);
+        this.launcherSprite = this.add.sprite(0, 30, "imageGameLauncher");
         this.launcherContainer.add(this.launcherSprite);
 
-        this.launcherBody = this.matter.add.rectangle(140, 51 - 100, 20, 60, {
-            isStatic: true,
+        this.createEdgeBodies(this.launcherVertices, {
+            thickness: 2,
+            friction: 0.05,
+            restitution: 1,
             label: 'launcher'
+        }, false);
+
+        this.matter.world.on('collisionstart', (event) => {
+            event.pairs.forEach((pair) => {
+                const { bodyA, bodyB } = pair;
+
+                const ballInvolved = bodyA === this.ball.body || bodyB === this.ball.body;
+                if (!ballInvolved) return;
+
+                const otherBody = bodyA === this.ball.body ? bodyB : bodyA;
+
+                if (otherBody.label === 'largeCircle') {
+                    this.updateScore(this.scoreValue + 20);
+                } else if (otherBody.label === 'mediumCircle') {
+                    this.updateScore(this.scoreValue + 10);
+                } else if (otherBody.label === 'launcher') {
+                    this.launcherIsMoving = true;
+                    this.launcherGoingUp = true;
+
+                    const boostFactor = 4;
+                    this.matter.body.setVelocity(this.ball.body, {
+                        x: this.ball.body.velocity.x * boostFactor,
+                        y: this.ball.body.velocity.y * boostFactor
+                    });
+                }
+            });
         });
 
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -275,6 +311,10 @@ class PinballGame extends Phaser.Scene {
     }
 
     update() {
+        if (this.ball.y > 70) {
+            this.gameOver = true;
+        }
+
         if (this.gameOver == true) {
             this.setBallStartPosition();
             this.gameOver = false;
@@ -318,16 +358,10 @@ class PinballGame extends Phaser.Scene {
         if (this.launcherIsMoving) {
             if (this.launcherGoingUp) {
                 this.launcherSprite.y -= 10;
-                if (this.launcherSprite.y <= -160) this.launcherGoingUp = false;
+                if (this.launcherSprite.y <= 0) this.launcherGoingUp = false;
             } else {
                 this.launcherSprite.y += 10;
-                if (this.launcherSprite.y >= -100) this.launcherIsMoving = false;
-            }
-            if (this.launcherBody) {
-                this.matter.body.setPosition(this.launcherBody, {
-                    x: this.launcherContainer.x,
-                    y: this.launcherContainer.y + this.launcherSprite.y
-                });
+                if (this.launcherSprite.y >= 30) this.launcherIsMoving = false;
             }
         }
     }
