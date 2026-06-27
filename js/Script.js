@@ -80,14 +80,7 @@ class PinballGame extends Phaser.Scene {
         this.rightFlipperVertices = [0,94,0,-40,-560,-32,-560,32];
         this.ballStart = [15.2016, -30];
         this.PTM = 100;
-
-        this.flipperJoints = [];
-        this.mediumCirclesList = [];
-        this.mediumCirclesHitList = [];
-        this.mediumCirclesGlowList = [];
-        this.largeCirclesList = [];
-        this.largeCirclesHitList = [];
-        this.largeCirclesGlowList = [];
+        this.flipperSpeed = 15;
     }
 
     init() {
@@ -202,6 +195,39 @@ class PinballGame extends Phaser.Scene {
             let cx = Math.floor(this.largeCircles[2 * i] * 0.10);
             let cy = Math.floor(this.largeCircles[2 * i + 1] * 0.10);
             this.add.sprite(cx, cy, "imageGameLargeCircle");
+        }
+
+        this.ballSprite = this.add.sprite(0, 0, "imageGameBall");
+        this.launcherContainer = this.add.container(140, 51);
+        this.launcherSprite = this.add.sprite(0, -100, "imageGameLauncher");
+        this.launcherContainer.add(this.launcherSprite);
+
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+    }
+
+    update() {
+        if (this.cursors.left.isDown || this.keyA.isDown) {
+            if(this.leftFlipperSprite.angle > -25) this.leftFlipperSprite.angle -= this.flipperSpeed;
+        } else {
+            if(this.leftFlipperSprite.angle < 27) this.leftFlipperSprite.angle += this.flipperSpeed;
+        }
+
+        if (this.cursors.right.isDown || this.keyD.isDown) {
+            if(this.rightFlipperSprite.angle < 25) this.rightFlipperSprite.angle += this.flipperSpeed;
+        } else {
+            if(this.rightFlipperSprite.angle > -27) this.rightFlipperSprite.angle -= this.flipperSpeed;
+        }
+
+        if (this.launcherIsMoving) {
+            if (this.launcherGoingUp) {
+                this.launcherSprite.y -= 10;
+                if (this.launcherSprite.y <= -160) this.launcherGoingUp = false;
+            } else {
+                this.launcherSprite.y += 10;
+                if (this.launcherSprite.y >= -100) this.launcherIsMoving = false;
+            }
         }
     }
 
