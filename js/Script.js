@@ -158,14 +158,12 @@ class PinballGame extends Phaser.Scene {
             fill: '#ffffff',
             fontStyle: 'bold'
         };
-        const shadowStyle = { ...fontStyle, fill: '#000000' };
 
         this.scoreBackground = this.add.graphics();
         this.scoreBackground.fillStyle(0x000000, 0.7);
         this.scoreBackground.lineStyle(2, 0x383838, 1);
         this.scoreBackground.fillRoundedRect(-145, -530, 104, 40, 10);
 
-        this.scoreLabelShadow = this.add.text(-135, -521.25, "0", shadowStyle);
         this.scoreLabel = this.add.text(-138, -523.25, "0", fontStyle);
 
         this.highScoreBackground = this.add.graphics();
@@ -173,10 +171,7 @@ class PinballGame extends Phaser.Scene {
         this.highScoreBackground.lineStyle(2, 0x0046A9, 1);
         this.highScoreBackground.fillRoundedRect(30.5, -530, 124, 40, 10);
 
-        this.highScoreIconShadow = this.add.sprite(39, -521, "imageGameHighScore").setTint(0x000000);
-        this.highScoreIcon = this.add.sprite(37, -523, "imageGameHighScore");
-
-        this.highScoreLabelShadow = this.add.text(69, -521.25, this.getHighscore(), shadowStyle);
+        this.highScoreIcon = this.add.sprite(47, -510, "imageGameHighScore");
         this.highScoreLabel = this.add.text(66, -523.25, this.getHighscore(), fontStyle);
 
         this.leftFlipperSprite = this.add.graphics();
@@ -217,12 +212,10 @@ class PinballGame extends Phaser.Scene {
         this.scoreValue = newScore;
         
         this.scoreLabel.setText(newScore);
-        this.scoreLabelShadow.setText(newScore);
 
         if (this.scoreValue > parseInt(this.getHighscore())) {
             this.setHighscore(this.scoreValue);
             this.highScoreLabel.setText(newScore);
-            this.highScoreLabelShadow.setText(newScore);
         }
     }
 
